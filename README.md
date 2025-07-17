@@ -27,4 +27,3 @@
 * Analysis results are returned showing itemized costs and total amount
 * Results are displayed to the user in a formatted way
 
-image.png
