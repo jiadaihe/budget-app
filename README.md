@@ -27,3 +27,4 @@
 * Analysis results are returned showing itemized costs and total amount
 * Results are displayed to the user in a formatted way
 
+<img width="1166" height="636" alt="image" src="https://github.com/user-attachments/assets/d507e281-3275-4de5-8ce4-ffe320e53fe1" />
