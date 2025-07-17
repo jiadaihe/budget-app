@@ -27,6 +27,11 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [backendStatus, setBackendStatus] = useState<string>('Unknown');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [analyzeResult, setAnalyzeResult] = useState<string | null>(null);
+  const [analyzeLoading, setAnalyzeLoading] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   // Listen to auth state changes
   useEffect(() => {
@@ -44,6 +49,17 @@ function App() {
   useEffect(() => {
     checkBackendHealth();
   }, []);
+
+  // Image preview effect
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(selectedFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selectedFile]);
 
   const checkBackendHealth = async () => {
     try {
@@ -104,6 +120,42 @@ function App() {
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Image upload and analyze handler
+  const handleImageUploadAndAnalyze = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAnalyzeResult(null);
+    setAnalyzeError(null);
+    if (!selectedFile) {
+      setAnalyzeError('Please select an image.');
+      return;
+    }
+    setAnalyzeLoading(true);
+    try {
+      // 1. Upload image
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!uploadRes.ok) throw new Error('Image upload failed');
+      const { filename } = await uploadRes.json();
+      // 2. Analyze image
+      const analyzeRes = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagePath: filename }),
+      });
+      if (!analyzeRes.ok) throw new Error('Image analysis failed');
+      const data = await analyzeRes.json();
+      setAnalyzeResult(data.analysis);
+    } catch (err: any) {
+      setAnalyzeError(err.message || 'Unknown error');
+    } finally {
+      setAnalyzeLoading(false);
     }
   };
 
@@ -183,6 +235,33 @@ function App() {
             </div>
           </div>
         )}
+
+        <section className="analyze-section">
+          <h2>Analyze a Receipt Image</h2>
+          <form onSubmit={handleImageUploadAndAnalyze}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+              disabled={analyzeLoading}
+            />
+            {previewUrl && (
+              <div style={{ margin: '1em 0' }}>
+                <img src={previewUrl} alt="Preview" style={{ maxWidth: 300, maxHeight: 300 }} />
+              </div>
+            )}
+            <button type="submit" disabled={analyzeLoading || !selectedFile} className="btn btn-primary">
+              {analyzeLoading ? 'Analyzing...' : 'Upload & Analyze'}
+            </button>
+          </form>
+          {analyzeError && <div className="error-message">{analyzeError}</div>}
+          {analyzeResult && (
+            <div className="analyze-result">
+              <h3>Analysis Result</h3>
+              <pre>{analyzeResult}</pre>
+            </div>
+          )}
+        </section>
 
         {profile && (
           <div className="profile-section">

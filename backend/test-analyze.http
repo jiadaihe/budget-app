@@ -1,0 +1,29 @@
+### Test Model Status
+GET http://localhost:3001/api/analyze/status
+
+### Test Image Analysis with Dataset Image
+POST http://localhost:3001/api/analyze
+Content-Type: application/json
+
+{
+  "imageUrl": "http://localhost:3001/dataset/receipt1.JPG",
+  "prompt": "What type of document is this? Describe what you see in this image."
+}
+
+### Test with another dataset image
+POST http://localhost:3001/api/analyze
+Content-Type: application/json
+
+{
+  "imageUrl": "http://localhost:3001/dataset/receipt2.JPG",
+  "prompt": "What type of document is this? Describe what you see in this image."
+}
+
+### Test with 311-specific prompt
+POST http://localhost:3001/api/analyze
+Content-Type: application/json
+
+{
+  "imageUrl": "http://localhost:3001/dataset/receipt3.JPG",
+  "prompt": "What 311 claim does this image depict? Choose from: 'decay_sidewalk', 'overflow_trash', 'rodents', 'illegal_parking', or 'none'"
+} 
